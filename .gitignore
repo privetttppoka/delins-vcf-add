@@ -1,0 +1,23 @@
+# Ignore everything by default.
+*
+
+# Keep this allowlist file.
+!.gitignore
+
+# Keep only the true-delins scripts needed for this task.
+!scripts/
+!scripts/test_true_delins_whatshap.py
+!scripts/true_delins_common.py
+!scripts/find_true_delins.py
+
+# Keep the test data directory.
+!indel_test/
+
+# Keep only top-level source test data, not generated benchmark outputs,
+# macOS metadata, caches, or nested result directories.
+indel_test/*
+!indel_test/*.vcf.gz
+!indel_test/*.vcf.gz.csi
+!indel_test/*.bam
+!indel_test/*.bam.bai
+!indel_test/*.tsv
