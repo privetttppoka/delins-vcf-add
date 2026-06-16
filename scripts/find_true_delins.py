@@ -263,16 +263,7 @@ def add_mnv_header(header: pysam.VariantHeader) -> None:
     add_info_fields(
         header,
         {
-            "TRUE_DELINS": ("0", "Flag", "Adjacent SNPs are supported as one read-backed delins/MNV."),
-            "DELINS_SRC_POS": ("1", "String", "Comma-separated source SNP positions."),
-            "DELINS_SRC_REF": ("1", "String", "Source REF haplotype."),
-            "DELINS_SRC_ALT": ("1", "String", "Source ALT haplotype."),
-            "DELINS_N_SNPS": ("1", "Integer", "Number of SNPs merged into this MNV."),
-            "DELINS_FULL_READS": ("1", "Integer", "Reads spanning all merged SNP positions."),
-            "DELINS_REF_HAP_READS": ("1", "Integer", "Reads supporting the REF haplotype."),
-            "DELINS_ALT_HAP_READS": ("1", "Integer", "Reads supporting the ALT haplotype."),
-            "DELINS_MIXED_HAP_READS": ("1", "Integer", "Reads supporting neither full REF nor full ALT haplotype."),
-            "DELINS_ALT_FRACTION": ("1", "Float", "ALT haplotype reads divided by full spanning reads."),
+            "TRUE_DELINS": ("0", "Flag", "MNV record added by true delins detection."),
         },
     )
 
@@ -291,15 +282,6 @@ def make_mnv_record(header: pysam.VariantHeader, stats: ReadHaplotypeStats, samp
     )
     record.filter.add("PASS")
     record.info["TRUE_DELINS"] = True
-    record.info["DELINS_SRC_POS"] = join_values(candidate.positions)
-    record.info["DELINS_SRC_REF"] = candidate.ref_hap
-    record.info["DELINS_SRC_ALT"] = candidate.alt_hap
-    record.info["DELINS_N_SNPS"] = len(candidate.variants)
-    record.info["DELINS_FULL_READS"] = stats.n_full_reads
-    record.info["DELINS_REF_HAP_READS"] = stats.n_ref_hap
-    record.info["DELINS_ALT_HAP_READS"] = stats.n_alt_hap
-    record.info["DELINS_MIXED_HAP_READS"] = stats.n_mixed_hap
-    record.info["DELINS_ALT_FRACTION"] = stats.alt_fraction
 
     if sample is not None and sample in header.samples:
         if "GT" in header.formats and candidate.variants[0].gt is not None:

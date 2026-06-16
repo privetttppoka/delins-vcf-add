@@ -21,3 +21,10 @@ indel_test/*
 !indel_test/*.bam
 !indel_test/*.bam.bai
 !indel_test/*.tsv
+
+# Ignore generated delins outputs in the test directory.
+indel_test/*_pysam*
+indel_test/*_whatshap*
+indel_test/*.mnv.vcf.gz
+indel_test/*.mnv.vcf.gz.tbi
+indel_test/*.summary.json

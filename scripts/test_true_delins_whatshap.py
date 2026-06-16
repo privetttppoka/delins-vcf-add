@@ -274,12 +274,7 @@ def add_mnv_header(header: pysam.VariantHeader) -> None:
     add_info_fields(
         header,
         {
-            "WHATSHAP_TRUE_DELINS": ("0", "Flag", "Adjacent SNPs are phased as one WhatsHap-supported delins/MNV."),
-            "WHATSHAP_DELINS_SRC_POS": ("1", "String", "Comma-separated source SNP positions."),
-            "WHATSHAP_DELINS_SRC_REF": ("1", "String", "Source REF haplotype."),
-            "WHATSHAP_DELINS_SRC_ALT": ("1", "String", "Source ALT haplotype."),
-            "WHATSHAP_DELINS_N_SNPS": ("1", "Integer", "Number of SNPs merged into this MNV."),
-            "WHATSHAP_DELINS_EVIDENCE": ("1", "String", "WhatsHap evidence for merging."),
+            "WHATSHAP_TRUE_DELINS": ("0", "Flag", "MNV record added by WhatsHap true delins detection."),
         },
     )
 
@@ -302,11 +297,6 @@ def make_mnv_record(header: pysam.VariantHeader, result: PhaseResult, sample: st
     )
     record.filter.add("PASS")
     record.info["WHATSHAP_TRUE_DELINS"] = True
-    record.info["WHATSHAP_DELINS_SRC_POS"] = join_values(candidate.positions)
-    record.info["WHATSHAP_DELINS_SRC_REF"] = candidate.ref_hap
-    record.info["WHATSHAP_DELINS_SRC_ALT"] = candidate.alt_hap
-    record.info["WHATSHAP_DELINS_N_SNPS"] = len(candidate.variants)
-    record.info["WHATSHAP_DELINS_EVIDENCE"] = result.evidence
 
     if sample is not None and sample in header.samples:
         if "GT" in header.formats and gt is not None:
