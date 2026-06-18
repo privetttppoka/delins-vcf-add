@@ -16,6 +16,7 @@ import pysam
 from true_delins_common import (
     Candidate,
     add_info_fields,
+    build_contig_name_map,
     build_candidates,
     candidate_record_id,
     fmt_float,
@@ -151,12 +152,14 @@ def read_haplotype(read: pysam.AlignedSegment, positions0: tuple[int, ...]) -> s
 def count_candidate_haplotypes(
     bam: pysam.AlignmentFile,
     candidate: Candidate,
+    contig_map: dict[str, str],
 ) -> tuple[Counter[str], int, int, int]:
+    bam_chrom = contig_map[candidate.chrom]
     positions0 = tuple(pos - 1 for pos in candidate.positions)
     hap_counts: Counter[str] = Counter()
     seen = filtered = partial = 0
 
-    for read in bam.fetch(candidate.chrom, candidate.start - 1, candidate.end):
+    for read in bam.fetch(bam_chrom, candidate.start - 1, candidate.end):
         seen += 1
         if not read_is_usable(read):
             filtered += 1
@@ -201,9 +204,10 @@ def analyze_candidate(
     bam: pysam.AlignmentFile,
     candidate: Candidate,
     sample: str | None,
+    contig_map: dict[str, str],
 ) -> ReadHaplotypeStats:
     started = time.perf_counter()
-    hap_counts, seen, filtered, partial = count_candidate_haplotypes(bam, candidate)
+    hap_counts, seen, filtered, partial = count_candidate_haplotypes(bam, candidate, contig_map)
     stats = ReadHaplotypeStats(
         candidate=candidate,
         sample=sample,
@@ -357,7 +361,13 @@ def main() -> int:
     candidates = build_candidates(variants, min_run_length)
 
     with pysam.AlignmentFile(args.bam) as bam:
-        stats = [analyze_candidate(bam, candidate, sample) for candidate in candidates]
+        contig_map = build_contig_name_map(
+            (candidate.chrom for candidate in candidates),
+            bam.references,
+            source_label="VCF candidate",
+            target_label="BAM",
+        )
+        stats = [analyze_candidate(bam, candidate, sample, contig_map) for candidate in candidates]
 
     write_tsv(stats, args.out_tsv)
     write_mnv_vcf(args, stats, sample)

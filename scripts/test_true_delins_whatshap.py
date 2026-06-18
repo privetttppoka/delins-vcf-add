@@ -20,6 +20,7 @@ from true_delins_common import (
     SnpVariant,
     add_info_fields,
     alt_haplotype_index,
+    build_contig_name_map,
     candidate_record_id,
     first_alt_depth,
     gt_class,
@@ -31,6 +32,7 @@ from true_delins_common import (
     join_values,
     normalize_gt,
     select_sample,
+    write_vcf_with_renamed_contigs,
 )
 
 
@@ -102,7 +104,7 @@ def timed_command(command: list[str]) -> float:
     return time.perf_counter() - started
 
 
-def run_whatshap(args: argparse.Namespace, phased_vcf: str) -> float:
+def run_whatshap(args: argparse.Namespace, input_vcf: str, phased_vcf: str) -> float:
     command = [
         "whatshap",
         "phase",
@@ -116,11 +118,15 @@ def run_whatshap(args: argparse.Namespace, phased_vcf: str) -> float:
     command.extend(["--reference", args.reference] if args.reference else ["--no-reference"])
     if args.sample:
         command.extend(["--sample", args.sample])
-    command.extend([args.vcf, args.bam])
+    command.extend([input_vcf, args.bam])
     return timed_command(command)
 
 
-def parse_phase_record(record: pysam.VariantRecord, sample: str | None) -> tuple[SnpVariant, PhaseSite] | None:
+def parse_phase_record(
+    record: pysam.VariantRecord,
+    sample: str | None,
+    contig_map: dict[str, str],
+) -> tuple[SnpVariant, PhaseSite] | None:
     if not is_pass_record(record) or not is_biallelic_snp(record):
         return None
 
@@ -139,7 +145,7 @@ def parse_phase_record(record: pysam.VariantRecord, sample: str | None) -> tuple
         phase_set = sample_data.get("PS")
 
     variant = SnpVariant(
-        chrom=record.chrom,
+        chrom=contig_map.get(record.chrom, record.chrom),
         pos=record.pos,
         ref=record.ref.upper(),
         alt=record.alts[0].upper(),
@@ -212,7 +218,11 @@ def starts_new_run(variant: SnpVariant, run_variants: list[SnpVariant]) -> bool:
     )
 
 
-def analyze_phased_vcf(phased_vcf: str, sample_name: str | None) -> tuple[list[PhaseResult], str | None]:
+def analyze_phased_vcf(
+    phased_vcf: str,
+    sample_name: str | None,
+    contig_map: dict[str, str],
+) -> tuple[list[PhaseResult], str | None]:
     results: list[PhaseResult] = []
     run_variants: list[SnpVariant] = []
     run_sites: list[PhaseSite] = []
@@ -220,7 +230,7 @@ def analyze_phased_vcf(phased_vcf: str, sample_name: str | None) -> tuple[list[P
     with pysam.VariantFile(phased_vcf) as vcf:
         sample = select_sample(vcf, sample_name)
         for record in vcf:
-            parsed = parse_phase_record(record, sample)
+            parsed = parse_phase_record(record, sample, contig_map)
             if parsed is None:
                 continue
 
@@ -373,12 +383,25 @@ def main() -> int:
 
     out_dir = Path(args.out_vcf).resolve().parent
     with tempfile.TemporaryDirectory(prefix="whatshap_delins.", dir=out_dir) as tmpdir:
+        with pysam.VariantFile(args.vcf) as vcf, pysam.AlignmentFile(args.bam) as bam:
+            vcf_to_bam_contigs = build_contig_name_map(
+                vcf.header.contigs,
+                bam.references,
+                source_label="VCF",
+                target_label="BAM",
+            )
+        bam_to_vcf_contigs = {bam_contig: vcf_contig for vcf_contig, bam_contig in vcf_to_bam_contigs.items()}
+
+        whatshap_vcf = str(Path(tmpdir, "input.bam_contigs.vcf.gz"))
+        write_vcf_with_renamed_contigs(args.vcf, whatshap_vcf, vcf_to_bam_contigs)
+        index_vcf(whatshap_vcf)
+
         phased_vcf = str(Path(tmpdir, "phased.vcf.gz"))
-        phase_sec = run_whatshap(args, phased_vcf)
+        phase_sec = run_whatshap(args, whatshap_vcf, phased_vcf)
         index_vcf(phased_vcf)
 
         analyze_started = time.perf_counter()
-        results, sample = analyze_phased_vcf(phased_vcf, args.sample)
+        results, sample = analyze_phased_vcf(phased_vcf, args.sample, bam_to_vcf_contigs)
         write_tsv(results, sample, args.out_tsv)
         write_corrected_vcf(args, results, sample)
         analyze_sec = time.perf_counter() - analyze_started

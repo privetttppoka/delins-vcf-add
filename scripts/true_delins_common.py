@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -195,6 +196,79 @@ def add_info_fields(header: pysam.VariantHeader, fields: dict[str, tuple[str, st
     for key, (number, field_type, description) in fields.items():
         if key not in header.info:
             header.info.add(key, number, field_type, description)
+
+
+def contig_aliases(contig: str) -> tuple[str, ...]:
+    aliases = [contig]
+    if contig.startswith("chr"):
+        aliases.append(contig[3:])
+        if contig == "chrM":
+            aliases.extend(["MT", "M"])
+    else:
+        aliases.append(f"chr{contig}")
+        if contig in {"MT", "M"}:
+            aliases.append("chrM")
+    return tuple(dict.fromkeys(aliases))
+
+
+def build_contig_name_map(
+    source_contigs: Iterable[str],
+    target_contigs: Iterable[str],
+    source_label: str = "source",
+    target_label: str = "target",
+) -> dict[str, str]:
+    target_set = set(target_contigs)
+    contig_map: dict[str, str] = {}
+    missing: list[str] = []
+
+    for contig in dict.fromkeys(source_contigs):
+        for alias in contig_aliases(contig):
+            if alias in target_set:
+                contig_map[contig] = alias
+                break
+        else:
+            missing.append(contig)
+
+    if missing:
+        shown = ", ".join(missing[:10])
+        raise SystemExit(
+            f"{source_label} contigs are absent from {target_label}: {shown}. "
+            "This usually means the files use different chromosome naming styles."
+        )
+    return contig_map
+
+
+def rename_contig_in_header_line(line: str, contig_map: dict[str, str]) -> str:
+    prefix = "##contig=<ID="
+    if not line.startswith(prefix):
+        return line
+
+    end = line.find(",", len(prefix))
+    if end == -1:
+        end = line.find(">", len(prefix))
+    if end == -1:
+        return line
+
+    contig = line[len(prefix):end]
+    renamed = contig_map.get(contig)
+    if renamed is None:
+        return line
+    return f"{line[:len(prefix)]}{renamed}{line[end:]}"
+
+
+def write_vcf_with_renamed_contigs(input_vcf: str, output_vcf: str, contig_map: dict[str, str]) -> None:
+    opener = gzip.open if input_vcf.endswith(".gz") else open
+    writer = pysam.BGZFile if output_vcf.endswith(".gz") else open
+
+    with opener(input_vcf, "rt") as inp, writer(output_vcf, "w") as out:
+        for line in inp:
+            if line.startswith("##contig=<ID="):
+                line = rename_contig_in_header_line(line, contig_map)
+            elif not line.startswith("#"):
+                fields = line.split("\t", 1)
+                fields[0] = contig_map.get(fields[0], fields[0])
+                line = "\t".join(fields)
+            out.write(line.encode() if output_vcf.endswith(".gz") else line)
 
 
 def index_vcf(path: str, no_index: bool = False) -> None:
