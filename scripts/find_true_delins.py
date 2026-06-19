@@ -69,7 +69,7 @@ max_mixed_fraction = 0.20  # Maximum allowed fraction of reads carrying neither 
 
 
 @dataclass
-class ReadHaplotypeStats:
+class CandidateReadStats:
     candidate: Candidate
     sample: str | None
     hap_counts: Counter[str]
@@ -116,7 +116,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def read_is_usable(read: pysam.AlignedSegment) -> bool:
+def passes_read_filters(read: pysam.AlignedSegment) -> bool:
     return not (
         read.is_unmapped
         or read.is_secondary
@@ -127,7 +127,7 @@ def read_is_usable(read: pysam.AlignedSegment) -> bool:
     )
 
 
-def read_haplotype(read: pysam.AlignedSegment, positions0: tuple[int, ...]) -> str | None:
+def get_read_haplotype(read: pysam.AlignedSegment, positions0: tuple[int, ...]) -> str | None:
     if read.query_sequence is None:
         return None
 
@@ -149,7 +149,7 @@ def read_haplotype(read: pysam.AlignedSegment, positions0: tuple[int, ...]) -> s
     return "".join(bases)
 
 
-def count_candidate_haplotypes(
+def count_read_haplotypes(
     bam: pysam.AlignmentFile,
     candidate: Candidate,
     contig_map: dict[str, str],
@@ -161,11 +161,11 @@ def count_candidate_haplotypes(
 
     for read in bam.fetch(bam_chrom, candidate.start - 1, candidate.end):
         seen += 1
-        if not read_is_usable(read):
+        if not passes_read_filters(read):
             filtered += 1
             continue
 
-        hap = read_haplotype(read, positions0)
+        hap = get_read_haplotype(read, positions0)
         if hap is None:
             partial += 1
             continue
@@ -175,7 +175,7 @@ def count_candidate_haplotypes(
     return hap_counts, seen, filtered, partial
 
 
-def decide(stats: ReadHaplotypeStats) -> tuple[bool, list[str]]:
+def decide(stats: CandidateReadStats) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     gt_labels = {gt_label(variant.gt) for variant in stats.candidate.variants}
 
@@ -205,10 +205,10 @@ def analyze_candidate(
     candidate: Candidate,
     sample: str | None,
     contig_map: dict[str, str],
-) -> ReadHaplotypeStats:
+) -> CandidateReadStats:
     started = time.perf_counter()
-    hap_counts, seen, filtered, partial = count_candidate_haplotypes(bam, candidate, contig_map)
-    stats = ReadHaplotypeStats(
+    hap_counts, seen, filtered, partial = count_read_haplotypes(bam, candidate, contig_map)
+    stats = CandidateReadStats(
         candidate=candidate,
         sample=sample,
         hap_counts=hap_counts,
@@ -221,7 +221,7 @@ def analyze_candidate(
     return stats
 
 
-def row(stats: ReadHaplotypeStats) -> dict[str, str | int | float]:
+def row(stats: CandidateReadStats) -> dict[str, str | int | float]:
     candidate = stats.candidate
     observed = ";".join(f"{hap}:{count}" for hap, count in stats.hap_counts.most_common())
     quals = [variant.qual for variant in candidate.variants if variant.qual is not None]
@@ -255,7 +255,7 @@ def row(stats: ReadHaplotypeStats) -> dict[str, str | int | float]:
     }
 
 
-def write_tsv(stats: list[ReadHaplotypeStats], path: str) -> None:
+def write_tsv(stats: list[CandidateReadStats], path: str) -> None:
     with open(path, "w", newline="", encoding="utf-8") as out:
         writer = csv.DictWriter(out, fieldnames=tsv_columns, delimiter="\t")
         writer.writeheader()
@@ -272,7 +272,7 @@ def add_mnv_header(header: pysam.VariantHeader) -> None:
     )
 
 
-def make_mnv_record(header: pysam.VariantHeader, stats: ReadHaplotypeStats, sample: str | None) -> pysam.VariantRecord:
+def make_mnv_record(header: pysam.VariantHeader, stats: CandidateReadStats, sample: str | None) -> pysam.VariantRecord:
     candidate = stats.candidate
     quals = [variant.qual for variant in candidate.variants if variant.qual is not None]
     gqs = [variant.gq for variant in candidate.variants if variant.gq is not None]
@@ -301,7 +301,7 @@ def make_mnv_record(header: pysam.VariantHeader, stats: ReadHaplotypeStats, samp
     return record
 
 
-def write_mnv_vcf(args: argparse.Namespace, stats: list[ReadHaplotypeStats], sample: str | None) -> None:
+def write_mnv_vcf(args: argparse.Namespace, stats: list[CandidateReadStats], sample: str | None) -> None:
     confirmed = [item for item in stats if item.decision]
     by_start = {(item.candidate.chrom, item.candidate.start): item for item in confirmed}
     source_keys = {
@@ -325,7 +325,7 @@ def write_mnv_vcf(args: argparse.Namespace, stats: list[ReadHaplotypeStats], sam
     index_vcf(args.out_vcf)
 
 
-def write_summary(args: argparse.Namespace, stats: list[ReadHaplotypeStats], sample: str | None, elapsed_sec: float) -> None:
+def write_summary(args: argparse.Namespace, stats: list[CandidateReadStats], sample: str | None, elapsed_sec: float) -> None:
     if not args.summary_json:
         return
     payload = {

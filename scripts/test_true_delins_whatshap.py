@@ -19,10 +19,8 @@ from true_delins_common import (
     GT,
     SnpVariant,
     add_info_fields,
-    alt_haplotype_index,
     build_contig_name_map,
     candidate_record_id,
-    first_alt_depth,
     gt_class,
     gt_has_alt,
     gt_label,
@@ -122,6 +120,26 @@ def run_whatshap(args: argparse.Namespace, input_vcf: str, phased_vcf: str) -> f
     return timed_command(command)
 
 
+def alt_depth_from_ad(ad: object) -> int | None:
+    if ad is None:
+        return None
+    try:
+        values = tuple(ad)
+    except TypeError:
+        return None
+    return values[1] if len(values) > 1 else None
+
+
+def alt_haplotype_from_gt(gt: GT) -> int | None:
+    if gt is None:
+        return None
+
+    alt_indexes = [index for index, allele in enumerate(gt) if allele is not None and allele > 0]
+    if len(alt_indexes) != 1:
+        return None
+    return alt_indexes[0] + 1
+
+
 def parse_phase_record(
     record: pysam.VariantRecord,
     sample: str | None,
@@ -140,7 +158,7 @@ def parse_phase_record(
             return None
         gq = sample_data.get("GQ")
         dp = sample_data.get("DP")
-        alt_depth = first_alt_depth(sample_data.get("AD"))
+        alt_depth = alt_depth_from_ad(sample_data.get("AD"))
         phased = bool(sample_data.phased)
         phase_set = sample_data.get("PS")
 
@@ -159,7 +177,7 @@ def parse_phase_record(
         phased=phased,
         phase_set=phase_set,
         gt_class=gt_class(gt),
-        alt_haplotype=alt_haplotype_index(gt),
+        alt_haplotype=alt_haplotype_from_gt(gt),
         dp=dp,
         alt_depth=alt_depth,
         gq=gq,

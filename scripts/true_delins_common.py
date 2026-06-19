@@ -82,23 +82,6 @@ def gt_class(gt: GT) -> str:
     return "het"
 
 
-def first_alt_depth(ad: object) -> int | None:
-    if ad is None:
-        return None
-    try:
-        values = tuple(ad)
-    except TypeError:
-        return None
-    return values[1] if len(values) > 1 else None
-
-
-def alt_haplotype_index(gt: GT) -> int | None:
-    if gt is None:
-        return None
-    indexes = [i for i, allele in enumerate(gt) if allele is not None and allele > 0]
-    return indexes[0] + 1 if len(indexes) == 1 else None
-
-
 def is_pass_record(record: pysam.VariantRecord) -> bool:
     filters = tuple(record.filter.keys())
     return not filters or filters == ("PASS",)
@@ -140,23 +123,18 @@ def snp_from_record(record: pysam.VariantRecord, sample: str | None) -> SnpVaria
     )
 
 
-def load_snp_variants(
-    vcf_path: str,
-    sample_name: str | None,
-    include_filtered: bool = False,
-    include_ref_gt: bool = False,
-) -> tuple[list[SnpVariant], str | None]:
+def load_snp_variants(vcf_path: str, sample_name: str | None) -> tuple[list[SnpVariant], str | None]:
     variants: list[SnpVariant] = []
     with pysam.VariantFile(vcf_path) as vcf:
         sample = select_sample(vcf, sample_name)
         for record in vcf:
-            if not include_filtered and not is_pass_record(record):
+            if not is_pass_record(record):
                 continue
             if not is_biallelic_snp(record):
                 continue
 
             variant = snp_from_record(record, sample)
-            if sample is not None and not include_ref_gt and not gt_has_alt(variant.gt):
+            if sample is not None and not gt_has_alt(variant.gt):
                 continue
             variants.append(variant)
     return variants, sample
@@ -238,7 +216,8 @@ def build_contig_name_map(
     return contig_map
 
 
-def rename_contig_in_header_line(line: str, contig_map: dict[str, str]) -> str:
+def rename_contig_header_line(line: str, contig_map: dict[str, str]) -> str:
+    """Rename contig ID inside a VCF ##contig header line."""
     prefix = "##contig=<ID="
     if not line.startswith(prefix):
         return line
@@ -257,13 +236,14 @@ def rename_contig_in_header_line(line: str, contig_map: dict[str, str]) -> str:
 
 
 def write_vcf_with_renamed_contigs(input_vcf: str, output_vcf: str, contig_map: dict[str, str]) -> None:
+    """Write a temporary VCF with contig names changed to match another file."""
     opener = gzip.open if input_vcf.endswith(".gz") else open
     writer = pysam.BGZFile if output_vcf.endswith(".gz") else open
 
     with opener(input_vcf, "rt") as inp, writer(output_vcf, "w") as out:
         for line in inp:
             if line.startswith("##contig=<ID="):
-                line = rename_contig_in_header_line(line, contig_map)
+                line = rename_contig_header_line(line, contig_map)
             elif not line.startswith("#"):
                 fields = line.split("\t", 1)
                 fields[0] = contig_map.get(fields[0], fields[0])
