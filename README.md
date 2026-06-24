@@ -39,6 +39,12 @@
 - `example_true_delins.mnv.vcf.gz` - исправленный VCF с добавленными MNV;
 - `example_true_delins.mnv.vcf.gz.tbi` - индекс итогового VCF.
 
+Для сравнения добавлен пример результата после запуска `test_true_delins_whatshap.py`:
+
+- `example_true_delins_whatshap.tsv` - лог кандидатов после анализа фазирования;
+- `example_true_delins_whatshap.mnv.vcf.gz` - исправленный VCF по WhatsHap-подходу;
+- `example_true_delins_whatshap.mnv.vcf.gz.tbi` - индекс итогового VCF.
+
 ## Скрипт `find_true_delins.py`
 
 Основной вариант анализа через `pysam`.
@@ -86,10 +92,10 @@ python scripts/find_true_delins.py \
 
 ```bash
 python scripts/test_true_delins_whatshap.py \
-  --vcf input.vcf.gz \
-  --bam input.bam \
-  --out-tsv whatshap_true_delins.tsv \
-  --out-vcf whatshap_true_delins.mnv.vcf.gz
+  --vcf indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz \
+  --bam indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam \
+  --out-tsv indel_test/example_true_delins_whatshap.tsv \
+  --out-vcf indel_test/example_true_delins_whatshap.mnv.vcf.gz
 ```
 
 Аргументы:

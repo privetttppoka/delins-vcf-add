@@ -23,3 +23,6 @@ indel_test/*
 !indel_test/example_true_delins.tsv
 !indel_test/example_true_delins.mnv.vcf.gz
 !indel_test/example_true_delins.mnv.vcf.gz.tbi
+!indel_test/example_true_delins_whatshap.tsv
+!indel_test/example_true_delins_whatshap.mnv.vcf.gz
+!indel_test/example_true_delins_whatshap.mnv.vcf.gz.tbi
