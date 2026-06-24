@@ -14,6 +14,17 @@
 
 Скрипты анализируют только соседние biallelic SNP, прошедшие фильтр `PASS` и содержащие ALT-аллель в генотипе выбранного sample.
 
+## Установка окружения
+
+Окружение можно собрать через conda:
+
+```bash
+conda env create --file environment.yml
+conda activate varvara-delins
+```
+
+Файл `environment.yml` содержит зависимости для основных скриптов, запуска `WhatsHap`, ручной проверки VCF/BAM через `bcftools`/`samtools` и построения benchmark-графиков.
+
 ## Выходные файлы
 
 Каждый скрипт формирует:

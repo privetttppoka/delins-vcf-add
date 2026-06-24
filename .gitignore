@@ -4,6 +4,7 @@
 # Keep this allowlist file.
 !.gitignore
 !README.md
+!environment.yml
 
 # Keep only the true-delins scripts needed for this task.
 !scripts/
