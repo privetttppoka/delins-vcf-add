@@ -45,6 +45,20 @@
 - `example_true_delins_whatshap.mnv.vcf.gz` - исправленный VCF по WhatsHap-подходу;
 - `example_true_delins_whatshap.mnv.vcf.gz.tbi` - индекс итогового VCF.
 
+## Результаты на большом GIAB-примере
+
+В папке `giab_big_test` в репозиторий добавлены только итоговые таблицы и графики, без исходных больших BAM/VCF и без промежуточных VCF:
+
+- `benchmark_big_pysam_vs_whatshap/benchmark_timings.tsv` - время выполнения по каждой итерации;
+- `benchmark_big_pysam_vs_whatshap/benchmark_summary.json` - сводка по времени выполнения;
+- `benchmark_big_pysam_vs_whatshap/benchmark_metadata.json` - входные файлы, параметры и описание метрики;
+- `benchmark_big_pysam_vs_whatshap/benchmark_runtime.png` - график времени выполнения;
+- `benchmark_big_pysam_vs_whatshap/benchmark_runtime.svg` - тот же график в SVG;
+- `whatshap_vs_pysam_comparison.tsv` - сравнение решений `pysam` и `WhatsHap` по всем кандидатам;
+- `whatshap_vs_pysam_differences.tsv` - только позиции, где решения двух подходов отличаются и требуют ручного просмотра.
+
+В сравнительной таблице колонка `comparison` показывает тип совпадения или расхождения: `BOTH_TRUE`, `BOTH_NO`, `PYSAM_TRUE_WHATSHAP_NO`, `WHATSHAP_TRUE_PYSAM_NO`. Колонка `needs_manual_review` помечает позиции, которые стоит посмотреть вручную.
+
 ## Скрипт `find_true_delins.py`
 
 Основной вариант анализа через `pysam`.
@@ -109,6 +123,8 @@ python scripts/test_true_delins_whatshap.py \
 - `--summary-json` - опциональный JSON с краткой сводкой.
 
 Если `--reference` не указан, WhatsHap запускается с `--no-reference`.
+
+В WhatsHap-подходе `FORMAT/AD` используется как дополнительный фильтр глубины. Для фазированных heterozygous-кандидатов отсутствие `AD` не является причиной отказа: решение принимается по phase set и положению ALT на гаплотипе. Для homozygous ALT-кандидатов `AD` нужен как минимальное подтверждение глубины, потому что WhatsHap не фазирует такие позиции.
 
 ## Общий модуль `true_delins_common.py`
 

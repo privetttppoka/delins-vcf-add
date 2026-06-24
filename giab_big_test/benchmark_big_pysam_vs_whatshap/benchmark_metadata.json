@@ -1,0 +1,49 @@
+{
+  "bam": "giab_big_test/project.NIST_NIST7035_H7AP8ADXX_TAAGGCGA_1_NA12878.bwa.markDuplicates.bam",
+  "parameters": {
+    "pysam_direct": {
+      "het_max_af": 0.75,
+      "het_min_af": 0.25,
+      "hom_alt_min_af": 0.8,
+      "max_mixed_fraction": 0.2,
+      "min_alt_hap_reads": 5,
+      "min_baseq": 20,
+      "min_full_reads": 5,
+      "min_mapq": 20,
+      "min_run_length": 2,
+      "strict_adjacent_snps": true
+    },
+    "whatshap_full": {
+      "ignore_read_groups": true,
+      "mapq": 20,
+      "min_run_length": 2,
+      "min_vcf_alt_depth": 5,
+      "only_snvs": true,
+      "strict_adjacent_snps": true
+    }
+  },
+  "reference": null,
+  "repeats": 3,
+  "sample": "NA12878",
+  "summary": {
+    "pysam_direct": {
+      "max_sec": 105.03991274999862,
+      "mean_sec": 98.44789841666837,
+      "median_sec": 95.83970900000713,
+      "min_sec": 94.46407349999936,
+      "n": 3,
+      "stdev_sec": 5.7501376492518865
+    },
+    "whatshap_full": {
+      "max_sec": 548.0645367090037,
+      "mean_sec": 531.090629847337,
+      "median_sec": 530.5103274580033,
+      "min_sec": 514.6970253750042,
+      "n": 3,
+      "stdev_sec": 16.691323084268884
+    }
+  },
+  "timing_metric": "runtime_sec",
+  "timing_metric_description": "Elapsed time reported by each script summary, excluding benchmark subprocess overhead.",
+  "vcf": "giab_big_test/NIST_RTG_PlatGen_merged_highconfidence_v0.2.primitives.fixed_info.vcf.gz"
+}

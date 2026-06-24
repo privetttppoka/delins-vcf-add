@@ -187,11 +187,13 @@ def parse_phase_record(
 
 def decide_by_phase(sites: tuple[PhaseSite, ...]) -> tuple[bool, tuple[str, ...], str]:
     reasons: list[str] = []
-    if any(site.alt_depth is None or site.alt_depth < min_vcf_alt_depth for site in sites):
+    if any(site.alt_depth is not None and site.alt_depth < min_vcf_alt_depth for site in sites):
         reasons.append("low_vcf_alt_depth")
 
     classes = {site.gt_class for site in sites}
     if classes == {"hom_alt"}:
+        if any(site.alt_depth is None for site in sites):
+            reasons.append("missing_vcf_alt_depth")
         return not reasons, tuple(reasons), "all_hom_alt" if not reasons else "phase_failed"
 
     if classes != {"het"}:
