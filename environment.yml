@@ -1,0 +1,11 @@
+name: varvara-delins
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.10
+  - pysam
+  - whatshap
+  - matplotlib
+  - bcftools
+  - samtools

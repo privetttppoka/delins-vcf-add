@@ -1,0 +1,7 @@
+method	iteration	runtime_sec	subprocess_elapsed_sec	reported_total_sec	phase_sec	analyze_sec	n_candidates	n_true_delins	stdout_tail	stderr_tail
+pysam_direct	1	94.46407349999936	95.0979652919923	94.46407349999936			24791	356		Processed 24791 candidates; confirmed 356 true delins; elapsed 94.46s.
+whatshap_full	1	530.5103274580033	530.6459922919894	530.5103274580033	385.3721238750004	107.18581937500858	24791	0		WhatsHap candidates 24791; confirmed 0 true delins; phase 385.37s; total 530.51s.
+pysam_direct	2	105.03991274999862	105.74726712499978	105.03991274999862			24791	356		Processed 24791 candidates; confirmed 356 true delins; elapsed 105.04s.
+whatshap_full	2	548.0645367090037	548.2100393330038	548.0645367090037	411.015660457997	97.95067495899275	24791	0		WhatsHap candidates 24791; confirmed 0 true delins; phase 411.02s; total 548.06s.
+pysam_direct	3	95.83970900000713	96.5382620409946	95.83970900000713			24791	356		Processed 24791 candidates; confirmed 356 true delins; elapsed 95.84s.
+whatshap_full	3	514.6970253750042	514.83679570799	514.6970253750042	378.1758129170048	98.90728691699042	24791	0		WhatsHap candidates 24791; confirmed 0 true delins; phase 378.18s; total 514.70s.

@@ -1,0 +1,43 @@
+# Ignore everything by default.
+*
+
+# Keep this allowlist file.
+!.gitignore
+!README.md
+!environment.yml
+
+# Keep only the true-delins scripts needed for this task.
+!scripts/
+!scripts/test_true_delins_whatshap.py
+!scripts/true_delins_common.py
+!scripts/find_true_delins.py
+
+# Keep the test data directory.
+!indel_test/
+
+# Keep only minimal source test data and one reproducible example output.
+indel_test/*
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz.csi
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam.bai
+!indel_test/example_true_delins.tsv
+!indel_test/example_true_delins.mnv.vcf.gz
+!indel_test/example_true_delins.mnv.vcf.gz.tbi
+!indel_test/example_true_delins_whatshap.tsv
+!indel_test/example_true_delins_whatshap.mnv.vcf.gz
+!indel_test/example_true_delins_whatshap.mnv.vcf.gz.tbi
+
+# Keep selected large-test result summaries, but not source GIAB BAM/VCF files
+# or per-run corrected VCF outputs.
+!giab_big_test/
+giab_big_test/*
+!giab_big_test/benchmark_big_pysam_vs_whatshap/
+giab_big_test/benchmark_big_pysam_vs_whatshap/*
+!giab_big_test/benchmark_big_pysam_vs_whatshap/benchmark_timings.tsv
+!giab_big_test/benchmark_big_pysam_vs_whatshap/benchmark_summary.json
+!giab_big_test/benchmark_big_pysam_vs_whatshap/benchmark_metadata.json
+!giab_big_test/benchmark_big_pysam_vs_whatshap/benchmark_runtime.png
+!giab_big_test/benchmark_big_pysam_vs_whatshap/benchmark_runtime.svg
+!giab_big_test/whatshap_vs_pysam_comparison.tsv
+!giab_big_test/whatshap_vs_pysam_differences.tsv
