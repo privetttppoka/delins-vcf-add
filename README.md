@@ -24,6 +24,21 @@
 
 Итоговый VCF остается нефазированным и подходит для дальнейшего downstream-анализа.
 
+## Тестовые данные
+
+В папке `indel_test` оставлен минимальный набор файлов для запуска примера:
+
+- `indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz` - входной VCF;
+- `indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz.csi` - индекс VCF;
+- `indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam` - входной BAM;
+- `indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam.bai` - индекс BAM.
+
+Также добавлен пример результата после запуска `find_true_delins.py`:
+
+- `example_true_delins.tsv` - лог найденных кандидатов;
+- `example_true_delins.mnv.vcf.gz` - исправленный VCF с добавленными MNV;
+- `example_true_delins.mnv.vcf.gz.tbi` - индекс итогового VCF.
+
 ## Скрипт `find_true_delins.py`
 
 Основной вариант анализа через `pysam`.
@@ -40,10 +55,10 @@
 
 ```bash
 python scripts/find_true_delins.py \
-  --vcf input.vcf.gz \
-  --bam input.bam \
-  --out-tsv true_delins.tsv \
-  --out-vcf true_delins.mnv.vcf.gz
+  --vcf indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz \
+  --bam indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam \
+  --out-tsv indel_test/example_true_delins.tsv \
+  --out-vcf indel_test/example_true_delins.mnv.vcf.gz
 ```
 
 Аргументы:

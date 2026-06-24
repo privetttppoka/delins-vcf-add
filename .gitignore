@@ -14,18 +14,12 @@
 # Keep the test data directory.
 !indel_test/
 
-# Keep only top-level source test data, not generated benchmark outputs,
-# macOS metadata, caches, or nested result directories.
+# Keep only minimal source test data and one reproducible example output.
 indel_test/*
-!indel_test/*.vcf.gz
-!indel_test/*.vcf.gz.csi
-!indel_test/*.bam
-!indel_test/*.bam.bai
-!indel_test/*.tsv
-
-# Ignore generated delins outputs in the test directory.
-indel_test/*_pysam*
-indel_test/*_whatshap*
-indel_test/*.mnv.vcf.gz
-indel_test/*.mnv.vcf.gz.tbi
-indel_test/*.summary.json
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.DeepVariant.vcf.gz.csi
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam
+!indel_test/indel_test_chr11_118000000-119000000.MGI.cutadapt.bwa.MarkDuplicates.bam.bai
+!indel_test/example_true_delins.tsv
+!indel_test/example_true_delins.mnv.vcf.gz
+!indel_test/example_true_delins.mnv.vcf.gz.tbi
