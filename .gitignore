@@ -3,6 +3,7 @@
 
 # Keep this allowlist file.
 !.gitignore
+!README.md
 
 # Keep only the true-delins scripts needed for this task.
 !scripts/
